@@ -86,7 +86,9 @@ public class SheetParser {
         Map<String, Object> fieldData = new LinkedHashMap<String, Object>();
         Object id = null;
         String name = null;
+        String ename = null;
         boolean haveId = false;
+        TableField enameField = null;
         for (int i = 0; i < fieldInfo.size(); i++) {
             field = fieldInfo.get(i);
             SystemLogger.currColumnName = field.getAlias();
@@ -102,23 +104,29 @@ public class SheetParser {
             } else if (field.getFieldType() == FieldType.NAME) {
                 name = String.valueOf(value);
             } else if (field.getFieldType() == FieldType.ENUM_NAME) {
-                if (id != null && name != null) {
-                    TableEnum tableEnum = new TableEnum(String.valueOf(value), name, (int)id);
-                    field.addEnum(tableEnum);
-                }
+                enameField = field;
+                ename = String.valueOf(value);
             }
             fieldData.put(field.getName(), value);
-        }
-        if (id != null && name != null) {
-            data.addTableIDMapping(id, name);
         }
         if (haveId && (id == null || "".equals(id))) {
             // 空行数据过滤
             // log.Error("emp " + field.getName() + " enum " + content);
         } else {
+            if (name != null) {
+                data.addTableIDMapping(id, name);
+                if (ename != null) {
+                    try {
+                        Integer intId = Integer.parseInt(String.valueOf(id));
+                        TableEnum tableEnum = new TableEnum(ename, name, intId);
+                        enameField.addEnum(tableEnum);
+                    } catch (Exception e) {
+
+                    }
+                }
+            }
             data.addData(fieldData);
         }
-
     }
 
     private Object getFieldValue(FieldType fieldType, FieldType subType, String content, TableField field) {

@@ -99,7 +99,7 @@ public class ExcelParser {
             }
             return 1;
         } catch(Exception e){
-            //e.printStackTrace();
+            e.printStackTrace();
             log.Error("sheet:" + SystemLogger.currSheetName + " column name:" + SystemLogger.currColumnName + " line:" + (SystemLogger.currLine + 1) + " : " + e.getMessage());
 //            if(e instanceof ReadExcelException){
 //                throw ((ReadExcelException) e).append(srcFile.getAlias());
