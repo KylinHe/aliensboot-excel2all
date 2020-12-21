@@ -141,6 +141,12 @@ public class SheetParser {
                 } catch (NumberFormatException e) {
                     return 0;
                 }
+            case LONG:
+                try {
+                    return (int)Float.parseFloat(content);
+                } catch (NumberFormatException e) {
+                    return 0;
+                }
             case FLOAT:
                 try {
                     return Float.parseFloat(content);

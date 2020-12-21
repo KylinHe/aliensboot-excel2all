@@ -46,6 +46,7 @@ public class GolangDialect implements Dialect {
         fieldTypemapping.put(FieldType.DOUBLE, "float64");
         fieldTypemapping.put(FieldType.BOOL, "bool");
         fieldTypemapping.put(FieldType.INT, "int32");
+        fieldTypemapping.put(FieldType.LONG, "int64");
 
         fieldTypemapping.put(FieldType.ENUM, "int32");
         fieldTypemapping.put(FieldType.ENUM_NAME, "string");
@@ -67,6 +68,9 @@ public class GolangDialect implements Dialect {
             fieldType = subFieldType;
         }
 
+        if (subFieldType == FieldType.ARRAY) {
+            prefix += "[]";
+        }
         String content = fieldTypemapping.get(fieldType);
         if (content == null) {
             content = "int32";

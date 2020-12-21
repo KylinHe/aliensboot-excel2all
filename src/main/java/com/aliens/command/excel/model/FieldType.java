@@ -11,6 +11,7 @@ public enum FieldType {
     DOUBLE("double"),
     BOOL("bool"),
     INT("int"),
+    LONG("long"),
 
     ENUM_NAME("ename"),
     ENUM("enum"),
