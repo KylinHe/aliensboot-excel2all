@@ -3,6 +3,8 @@ package com.aliens.command.excel;
 import com.aliens.command.excel.model.TableData;
 import com.aliens.command.log.ILogger;
 import com.aliens.command.log.SystemLogger;
+import com.vvv.converter.Toolkit;
+import nl.fountain.xelem.lex.ExcelReader;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -18,6 +20,7 @@ import java.util.*;
 public class ExcelParser {
 
     private static final String EXCEL_TYPE_XLS = "xls";
+    private static final String EXCEL_TYPE_XML = "xml";
     private static final String EXCEL_TYPE_XLSX = "xlsx";
 
     //解析的全局数据
@@ -83,10 +86,15 @@ public class ExcelParser {
             return 0;
         }
         Workbook workbook = null;
+        // log.Info("parse file " + srcFile.getName());
+
         try {
             switch (fileType) {
-                case EXCEL_TYPE_XLS:
+                case EXCEL_TYPE_XLS :
                     workbook = new HSSFWorkbook(new FileInputStream(srcFile));
+                    break;
+                case EXCEL_TYPE_XML:
+                    workbook = Toolkit.transferWorkbook(srcFile);
                     break;
                 case EXCEL_TYPE_XLSX:
                     workbook = new XSSFWorkbook(srcFile);

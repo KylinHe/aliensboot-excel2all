@@ -162,7 +162,6 @@ public class Main {
 
         ExcelParser parser = new ExcelParser();
 
-
         parser.parse(inputFile);
 
         if (dialect.equals("json")) {
