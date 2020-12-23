@@ -14,6 +14,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import com.vvv.converter.model.CellInfo;
@@ -36,7 +37,9 @@ public class Toolkit {
 			//ArgsParser argsParser = new ArgsParser(args);
 
 			ExcelReader er = new ExcelReader();
-			Workbook workbook = er.getWorkbook(file.getPath());
+			InputSource source = new InputSource(new FileInputStream(file));
+			//Workbook workbook = er.getWorkbook(file.toURI().getPath());
+			Workbook workbook = er.getWorkbook(source);
 
 
 			for (Worksheet sheet : workbook.getWorksheets()) {
