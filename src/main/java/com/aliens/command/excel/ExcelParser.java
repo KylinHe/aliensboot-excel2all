@@ -173,8 +173,9 @@ public class ExcelParser {
                         if (refValue != null) {
                             refValues.add(refValue);
                         } else {
+                            refValues.add(0);
                             log.Warning("table " + data.getAlias() + ":[]" + fieldName + " refer value not found :" + keys[i]);
-                            continue;
+                            //continue;
                         }
                     }
                     tableFields.put(fieldName, refValues.toArray());
