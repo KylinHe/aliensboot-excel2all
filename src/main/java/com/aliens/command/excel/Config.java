@@ -11,6 +11,9 @@ public class Config {
     //表格名过滤
     private static String[] include = null;
 
+    //数据表名过滤
+    private static String[] tableInclude = null;
+
     //字段过滤
     private static String[] fieldFilter = null;
 
@@ -50,6 +53,22 @@ public class Config {
 
     public static void setInclude(String[] include) {
         Config.include = include;
+    }
+
+    public static void setTableInclude(String[] tableInclude) {
+        Config.tableInclude = tableInclude;
+    }
+
+    public static boolean isTableFilter(String name) {
+        boolean haveInclude = Config.tableInclude != null && Config.tableInclude.length > 0;
+        if (haveInclude) {
+            for (String curr : Config.tableInclude) {
+                if (curr.equals(name)) {
+                    return false;
+                }
+            }
+        }
+        return haveInclude;
     }
 
     public static boolean isFilter(String name) {

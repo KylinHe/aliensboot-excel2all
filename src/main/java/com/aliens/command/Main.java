@@ -27,6 +27,8 @@ public class Main {
 
     public static final String PARAM_NAME_INCLUDE = "-include"; //包含表格名
 
+    public static final String PARAM_NAME_T_INCLUDE = "-t_include"; //包含数据表名
+
     public static final String PARAM_NAME_FIELD_FILTER = "-ff"; //过滤字段名
 
     public static final String PARAM_NAME_FIELD_TYPE_ALIAS = "-fta"; //字段类型别名替换
@@ -44,8 +46,25 @@ public class Main {
     public static void main(String[] args) {
         //dealUECommand(args);
 
-        //ExcelParser parser = new ExcelParser();
-        //parser.parse(new File("/Users/hejialin/git/aliens/aliensboot/aliensboot-custom-servers/slg_server/data/table"));
+//        ExcelParser parser = new ExcelParser();
+//        parser.parse(new File("/Users/hejialin/git/server/tt_earth/tools/table"));
+//        for (TableData tableData : parser.getData().values()) {
+//            List<Map<String, Object>> datas = tableData.getDataArray();
+//
+//            if (!tableData.haveField()) {
+//                return;
+//            }
+//
+//            JSONArray array = new JSONArray();
+//            JSONObject rowData;
+//            for (Map<String, Object> data : datas) {
+//                rowData = new JSONObject(true);
+//                rowData.putAll(data);
+//                array.add(rowData);
+//            }
+//            System.out.println(array.toJSONString());
+//
+//        }
         //File output = new File("/Users/hejialin/git/aliens/aliensboot/aliensboot-custom-servers/slg_server/data/table_out_json");
 //        parser.parse(new File("/Users/hejialin/git/aliens/aliensboot/aliensboot-toolkit/excel2all/test"));
 //
@@ -113,6 +132,13 @@ public class Main {
             String[] include = includes.split(",");
             Config.setInclude(include);
         }
+
+        String tableIncludes = params.get(PARAM_NAME_T_INCLUDE);
+        if (tableIncludes != null){
+            String[] tableInclude = tableIncludes.split(",");
+            Config.setTableInclude(tableInclude);
+        }
+
 
         String fieldFilter = params.get(PARAM_NAME_FIELD_FILTER);
         if (fieldFilter != null){
