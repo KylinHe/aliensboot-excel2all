@@ -55,6 +55,8 @@ public class GolangDialect implements Dialect {
 
         fieldTypemapping.put(FieldType.REFER, "int32");
         fieldTypemapping.put(FieldType.JSON, "string");
+
+        fieldTypemapping.put(FieldType.TERM, "int32");
     }
 
     @Override

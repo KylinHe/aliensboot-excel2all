@@ -21,7 +21,13 @@ public enum FieldType {
     JSON("json"),  // {field:int,abc:string}
 
     //refer other table
-    REFER("refer");
+    REFER("refer"),
+
+    TERM("term"),//wjl 20210506 条件(特殊类型)
+    TERM_ID("termId"),//wjl 20210506 条件(特殊类型)
+
+    TUTORIAL("tutorialType"),//wjl 20210625 引导类型
+    TUTORIAL_ID("tutorialId");//wjl 2021062 引导ID
 
     private String type;
 

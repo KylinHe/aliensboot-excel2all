@@ -30,7 +30,6 @@ public class TableData {
     //all data
     private List<Map<String, Object>> dataArray = new ArrayList<Map<String, Object>>();
 
-
     //id - alias mapping
     private Map<String, Object> idMapping = new HashMap<String, Object>();
 
@@ -144,10 +143,12 @@ public class TableData {
                     Object dataValue = rowData.get(fieldName);
                     TableField field = this.getFieldByName(fieldName);
                     // 关联类型为int
-                    if (field != null && field.getFieldType() == FieldType.REFER) {
-                        if (dataValue == null || "".equals(dataValue)) {
-                            dataValue = 0;
-                            rowData.put(fieldName, dataValue);
+                    if (field != null ){
+                        if( field.getFieldType() == FieldType.REFER || field.getFieldType() == FieldType.TERM ) {
+                            if (dataValue == null || "".equals(dataValue)) {
+                                dataValue = 0;
+                                rowData.put(fieldName, dataValue);
+                            }
                         }
                     }
 
@@ -230,6 +231,40 @@ public class TableData {
 
     public List<Map<String, Object>> getDataArray() {
         return dataArray;
+    }
+
+    public Map<String, Object >getDataByTid( int tid ){
+        TableField field = this.getFieldByType( FieldType.ID );
+        if (field == null){
+            return null;
+        }
+        for( Map<String, Object > data :dataArray ){
+              Object obj = data.get( field.getName() );
+              if (obj == null){
+                  continue;
+              }
+              if(Integer.parseInt(obj.toString()) == tid ){
+                      return data;
+              }
+        }
+        return null;
+    }
+
+    public Map<String, Object>getDataByName( String name ){
+        TableField field = this.getFieldByType( FieldType.NAME );
+        if (field == null){
+            return null;
+        }
+        for( Map<String, Object > data :dataArray ){
+            Object obj = data.get( field.getName() );
+            if (obj == null){
+                continue;
+            }
+            if(obj.toString()== name ){
+                return data;
+            }
+        }
+        return null;
     }
 
     public void addData(Map<String, Object> rowData) {

@@ -1,10 +1,12 @@
 package com.aliens.command.excel;
 
+import com.aliens.command.excel.model.FieldType;
 import com.aliens.command.excel.model.TableData;
+import com.aliens.command.excel.model.TableField;
 import com.aliens.command.log.ILogger;
 import com.aliens.command.log.SystemLogger;
 import com.vvv.converter.Toolkit;
-//import nl.fountain.xelem.lex.ExcelReader;
+import nl.fountain.xelem.lex.ExcelReader;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -13,6 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Created by hejialin on 2018/3/10.
@@ -39,12 +42,14 @@ public class ExcelParser {
         // 注入关联
         for (TableData tableData : this.data.values()) {
             updateRef(tableData, mapping);
+            updateTerm(tableData, mapping );//临时代码
         }
         // 合并字段
         for (TableData tableData : this.data.values()) {
             tableData.mergeField();
             //tableData.filterField();
         }
+
     }
 
     private int parse0(final File srcFile) {
@@ -198,6 +203,83 @@ public class ExcelParser {
 
 
             }
+        }
+    }
+
+    //wjl 20210507 更新条件
+    public void updateTerm(TableData data, Map<String, Map<String, Object>> mapping) {
+        if (data == null || !data.haveRef()) {
+            return;
+        }
+        //先找到 对应的条件 列关联
+        String term = "";
+        String termId = "";
+        for (TableField field : data.getFieldInfo()) {
+            if ( field.getFieldType() == FieldType.ARRAY && field.getSubType() == FieldType.TERM ){
+                term = field.getName();
+            }
+            if ( field.getFieldType() == FieldType.ARRAY && field.getSubType() == FieldType.TERM_ID ){
+                termId = field.getName();
+            }
+        }
+        if ( term.equals("") || termId.equals("") ){//必须不为空 才会有接下来的故事
+            return;
+        }
+        TableData termTable = this.data.get("条件类型表");//代码写死 强制读取条件类型表
+        if (termTable == null){//不存在条件类型表哦
+            log.Warning(" 【条件类型表】 不存在！！！ ");
+            return;
+        }
+        for (Map<String, Object> tableFields : data.getDataArray()) {
+            Object obj = null;
+            obj = tableFields.get(term);
+            if ( obj == null ){
+                return;
+            }
+            Object[] termArr = (Object[])obj;
+            obj = tableFields.get(termId);
+            if( obj == null){
+                return;
+            }
+            Object[] termIdArr = (Object[])obj;
+            if ( termArr.length != termIdArr.length ){
+                log.Warning("term table 【" + data.getAlias() + "】 term length not equal  >> " + tableFields.toString() );
+                continue;
+            }
+            List<Object> values = new ArrayList<Object>();
+            for ( int i=0; i<termArr.length; i++ ){
+                Object objTerm = termArr[i];
+                Object objTermId = termIdArr[i];
+                Map<String, Object > termData = termTable.getDataByTid( Integer.parseInt( objTerm.toString() ) );
+                if ( termData == null ){
+                    log.Warning("【条件类型表】 id >> " + objTerm.toString() + " not found " );
+                    continue;
+                }
+                Object table = termData.get("table");//表关联
+                if ( table == null ){
+                    log.Warning("【条件类型表】 id >> " + objTerm.toString() + " table is null " );
+                    continue;
+                }
+                String tableName =  table.toString();
+                if (tableName.equals("") == true){//字段为空
+                    values.add( 0 );
+                    continue;
+                }
+
+                Map<String, Object> tableValue = mapping.get(tableName);
+                if (tableValue == null || tableValue.isEmpty()) {
+                    log.Warning("term table " + data.getAlias() + " refer data not found :" + tableName );
+                    continue;
+                }
+                Object tableData = tableValue.get( objTermId.toString() );
+                if( tableData == null ){
+                    log.Warning("term table: " + data.getAlias() + " id not found :" + objTermId.toString() );
+                    values.add( 0 );
+                }else{
+                    values.add( tableData );
+                }
+            }
+            tableFields.put(termId, values.toArray());
         }
     }
 

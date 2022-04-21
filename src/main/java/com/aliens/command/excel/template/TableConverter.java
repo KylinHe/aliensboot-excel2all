@@ -1,6 +1,5 @@
 package com.aliens.command.excel.template;
 
-import com.aliens.command.excel.Config;
 import com.aliens.command.excel.model.TableData;
 import com.aliens.command.excel.template.constant.Constants;
 import com.aliens.command.excel.template.dialect.Dialect;
@@ -24,9 +23,6 @@ public class TableConverter implements Converter {
 
         String body = template.getBody();
         for (TableData currData : tableData) {
-            if (Config.isTableFilter(currData.getName())) {
-                continue;
-            }
             String tablePrefix = replaceTableContent(currData, body);
             content.append(tablePrefix);
         }

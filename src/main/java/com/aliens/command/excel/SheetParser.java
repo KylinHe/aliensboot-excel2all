@@ -174,7 +174,7 @@ public class SheetParser {
                 }
             case ARRAY:
                 String[] arrayInfo = content.split(ARRAY_SPLIT);
-                if (subType != null && subType != FieldType.REFER) {
+                if (subType != null && subType != FieldType.REFER && subType != FieldType.TERM ) {
                     List<Object> result = new ArrayList<Object>();
                     for (String info : arrayInfo) {
                         if (!info.isEmpty()) {
@@ -200,7 +200,6 @@ public class SheetParser {
         }
         CellType type = cell.getCellType();
         if (type == CellType.NUMERIC) {
-
             return String.valueOf(cell.getNumericCellValue());
         } else if (type == CellType.BOOLEAN) {
             return String.valueOf(cell.getBooleanCellValue());
@@ -275,7 +274,7 @@ public class SheetParser {
             if (fieldType == null) {
                 log.Error("un expect field type : " + fieldInfoText + " at column " + i);
             }
-
+			
             if (fieldType == FieldType.ARRAY) {
                 fieldInfoText = fieldInfoText.substring(1, fieldInfoText.length() - 1);
                 subFieldType = getFieldType(fieldInfoText);
@@ -297,7 +296,11 @@ public class SheetParser {
             fieldType = FieldType.REFER;
         } else if (fieldInfoText.startsWith("[") && fieldInfoText.endsWith("]")){
             fieldType = FieldType.ARRAY;
-        } else {
+        } else if( fieldInfoText.startsWith("#") ){
+            fieldType = FieldType.TERM;//条件
+        } else if( fieldInfoText.startsWith("*") ){
+            fieldType = FieldType.TERM_ID;//条件
+        }else{
             fieldType = FieldType.getFieldType(fieldInfoText);
         }
         return fieldType;
@@ -313,7 +316,10 @@ public class SheetParser {
             for (Map.Entry<String, TableEnum> entry : enumMapping.entrySet()) {
                 field.addEnum(entry.getValue());
             }
-        } else if (fieldType == FieldType.ID) {
+        }else if (fieldType == FieldType.TERM ){
+            field.setRef(fieldInfoText.substring(1));
+            data.addRefField(field.getName(), field.getRef());
+        }else if (fieldType == FieldType.ID) {
             Map<String, TableEnum> enumMapping = readEnum(fieldInfo);
             if (enumMapping != null) {
                 String tableName = enumMapping.get(TABLE_NAME_KEY).getName();
