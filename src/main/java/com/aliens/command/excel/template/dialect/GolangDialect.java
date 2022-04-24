@@ -25,21 +25,6 @@ public class GolangDialect implements Dialect {
         return instance;
     }
 
-//    STRING("string"),
-//    FLOAT("float"),
-//    BOOL("bool"),
-//    INT("int"),
-//
-//    ENUM("enum"),
-//    ID("id"),
-//    NAME("name"),
-//    ARRAY("json"),  //[int]
-//    Object("object"),  // {field:int,abc:string}
-//
-//    //refer other table
-//    REFER("refer");
-
-
     static {
         fieldTypemapping.put(FieldType.STRING, "string");
         fieldTypemapping.put(FieldType.FLOAT, "float32");
@@ -55,7 +40,6 @@ public class GolangDialect implements Dialect {
 
         fieldTypemapping.put(FieldType.REFER, "int32");
         fieldTypemapping.put(FieldType.JSON, "string");
-
         fieldTypemapping.put(FieldType.TERM, "int32");
     }
 

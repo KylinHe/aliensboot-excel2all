@@ -1,9 +1,21 @@
 package com.aliens.command.excel.template.constant;
 
+import com.aliens.command.excel.model.FieldType;
+
 /**
  * Created by hejialin on 2018/3/13.
  */
 public class Constants {
+
+
+    public static final String TABLE_FIELD_NAME_TABLE = "table";   //表名关键字
+    //
+    public static final String TABLE_FIELD_TAG_RELATION = "$";   //表关联标识
+    public static final String TABLE_FIELD_TAG_ARRAY_BEGIN = "["; //数组类型起始标识
+    public static final String TABLE_FIELD_TAG_ARRAY_END = "]";  //数组类型结束标识
+    public static final String TABLE_FIELD_TAG_TERM_KEY = "#"; //聚合关联Key标识
+    public static final String TABLE_FIELD_TAG_TERM_VALUE = "*"; //聚合关联Value标识
+
 
     public static final String TAG_TABLE_BEGIN = "<table>";
     public static final String TAG_ENUM_BEGIN = "<enum>";

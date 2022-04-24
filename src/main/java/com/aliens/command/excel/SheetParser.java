@@ -5,6 +5,7 @@ import com.aliens.command.excel.model.FieldType;
 import com.aliens.command.excel.model.TableData;
 import com.aliens.command.excel.model.TableEnum;
 import com.aliens.command.excel.model.TableField;
+import com.aliens.command.excel.template.constant.Constants;
 import com.aliens.command.log.ILogger;
 import com.aliens.command.log.SystemLogger;
 import com.aliens.util.CharacterUtil;
@@ -69,10 +70,8 @@ public class SheetParser {
     }
 
     private void loadFieldDesc(TableData data, Row dataRow) {
-        TableField field = null;
         List<TableField> fieldInfo = data.getFieldInfo();
-        for (int i = 0; i < fieldInfo.size(); i++) {
-            field = fieldInfo.get(i);
+        for (TableField field : fieldInfo) {
             Cell cell = dataRow.getCell(field.getIndex());
             if (cell != null) {
                 field.setAlias(cell.getStringCellValue());
@@ -81,7 +80,6 @@ public class SheetParser {
     }
 
     private void loadFieldData(TableData data, Row dataRow) {
-        TableField field = null;
         List<TableField> fieldInfo = data.getFieldInfo();
         Map<String, Object> fieldData = new LinkedHashMap<String, Object>();
         Object id = null;
@@ -89,8 +87,7 @@ public class SheetParser {
         String ename = null;
         boolean haveId = false;
         TableField enameField = null;
-        for (int i = 0; i < fieldInfo.size(); i++) {
-            field = fieldInfo.get(i);
+        for (TableField field : fieldInfo) {
             SystemLogger.currColumnName = field.getAlias();
             Cell cell = dataRow.getCell(field.getIndex());
             String content = "";
@@ -136,11 +133,6 @@ public class SheetParser {
             case BOOL:
                 return Boolean.parseBoolean(content);
             case INT:
-                try {
-                    return (int)Float.parseFloat(content);
-                } catch (NumberFormatException e) {
-                    return 0;
-                }
             case LONG:
                 try {
                     return (int)Float.parseFloat(content);
@@ -163,7 +155,7 @@ public class SheetParser {
                 Integer enumValue = field.getEnum(content);
                 if (enumValue == null) {
                     log.Error("unexpect field " + field.getName() + " enum " + content);
-                    enumValue = Integer.valueOf(0);
+                    enumValue = 0;
                 }
                 return enumValue;
             case ID:
@@ -185,8 +177,6 @@ public class SheetParser {
                 } else {
                     return arrayInfo;
                 }
-            case NAME:
-                return content;
             case JSON:
                 return JSONObject.parse(content);
             default:
@@ -292,13 +282,13 @@ public class SheetParser {
     private FieldType getFieldType(String fieldInfoText) {
         FieldType fieldType = null;
         //FieldType subFieldType = null;
-        if (fieldInfoText.startsWith("$")) {
+        if (fieldInfoText.startsWith(Constants.TABLE_FIELD_TAG_RELATION)) {
             fieldType = FieldType.REFER;
-        } else if (fieldInfoText.startsWith("[") && fieldInfoText.endsWith("]")){
+        } else if (fieldInfoText.startsWith(Constants.TABLE_FIELD_TAG_ARRAY_BEGIN) && fieldInfoText.endsWith(Constants.TABLE_FIELD_TAG_ARRAY_END)){
             fieldType = FieldType.ARRAY;
-        } else if( fieldInfoText.startsWith("#") ){
+        } else if( fieldInfoText.startsWith(Constants.TABLE_FIELD_TAG_TERM_KEY) ){
             fieldType = FieldType.TERM;//条件
-        } else if( fieldInfoText.startsWith("*") ){
+        } else if( fieldInfoText.startsWith(Constants.TABLE_FIELD_TAG_TERM_VALUE) ){
             fieldType = FieldType.TERM_ID;//条件
         }else{
             fieldType = FieldType.getFieldType(fieldInfoText);
@@ -311,15 +301,18 @@ public class SheetParser {
         if (fieldType == FieldType.REFER) {
             field.setRef(fieldInfoText.substring(1));
             data.addRefField(field.getName(), field.getRef());
+        } else if (fieldType == FieldType.TERM) {
+            field.setRef(fieldInfoText.substring(1));
+            data.addTableRefFieldKey(field.getRef(), field.getName());
+        } else if (fieldType == FieldType.TERM_ID) {
+            field.setRef(fieldInfoText.substring(1));
+            data.addTableRefFieldValue(field.getRef(), field.getName());
         } else if (fieldType == FieldType.ENUM) {
             Map<String, TableEnum> enumMapping = readEnum(fieldInfo);
             for (Map.Entry<String, TableEnum> entry : enumMapping.entrySet()) {
                 field.addEnum(entry.getValue());
             }
-        }else if (fieldType == FieldType.TERM ){
-            field.setRef(fieldInfoText.substring(1));
-            data.addRefField(field.getName(), field.getRef());
-        }else if (fieldType == FieldType.ID) {
+        } else if (fieldType == FieldType.ID) {
             Map<String, TableEnum> enumMapping = readEnum(fieldInfo);
             if (enumMapping != null) {
                 String tableName = enumMapping.get(TABLE_NAME_KEY).getName();

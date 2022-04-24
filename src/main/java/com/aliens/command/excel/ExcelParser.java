@@ -6,7 +6,6 @@ import com.aliens.command.excel.model.TableField;
 import com.aliens.command.log.ILogger;
 import com.aliens.command.log.SystemLogger;
 import com.vvv.converter.Toolkit;
-import nl.fountain.xelem.lex.ExcelReader;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -15,7 +14,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Created by hejialin on 2018/3/10.
@@ -197,7 +195,6 @@ public class ExcelParser {
                         tableFields.put(fieldName, null);
                         //tableFields.put(fieldName, 0);
                         log.Warning("table " + data.getAlias() + ":" + fieldName + " refer value not found :" + refKey);
-                        continue;
                     }
                 }
 
@@ -206,81 +203,102 @@ public class ExcelParser {
         }
     }
 
-    //wjl 20210507 更新条件
+    //wjl 20210507 更新条件关联
     public void updateTerm(TableData data, Map<String, Map<String, Object>> mapping) {
-        if (data == null || !data.haveRef()) {
+        if (data == null || !data.haveTableRef()) {
             return;
         }
-        //先找到 对应的条件 列关联
-        String term = "";
-        String termId = "";
-        for (TableField field : data.getFieldInfo()) {
-            if ( field.getFieldType() == FieldType.ARRAY && field.getSubType() == FieldType.TERM ){
-                term = field.getName();
-            }
-            if ( field.getFieldType() == FieldType.ARRAY && field.getSubType() == FieldType.TERM_ID ){
-                termId = field.getName();
-            }
-        }
-        if ( term.equals("") || termId.equals("") ){//必须不为空 才会有接下来的故事
-            return;
-        }
-        TableData termTable = this.data.get("条件类型表");//代码写死 强制读取条件类型表
-        if (termTable == null){//不存在条件类型表哦
-            log.Warning(" 【条件类型表】 不存在！！！ ");
-            return;
-        }
-        for (Map<String, Object> tableFields : data.getDataArray()) {
-            Object obj = null;
-            obj = tableFields.get(term);
-            if ( obj == null ){
-                return;
-            }
-            Object[] termArr = (Object[])obj;
-            obj = tableFields.get(termId);
-            if( obj == null){
-                return;
-            }
-            Object[] termIdArr = (Object[])obj;
-            if ( termArr.length != termIdArr.length ){
-                log.Warning("term table 【" + data.getAlias() + "】 term length not equal  >> " + tableFields.toString() );
+        for (Map.Entry<String, String> tableRef : data.getTableRefKeyField().entrySet()) {
+            String relateTable = tableRef.getKey();
+            TableData termTable = this.data.get(relateTable);
+            if (termTable == null) {
+                log.Warning("term table 【" + relateTable + "】 not found  >> ");
                 continue;
             }
-            List<Object> values = new ArrayList<Object>();
-            for ( int i=0; i<termArr.length; i++ ){
-                Object objTerm = termArr[i];
-                Object objTermId = termIdArr[i];
-                Map<String, Object > termData = termTable.getDataByTid( Integer.parseInt( objTerm.toString() ) );
-                if ( termData == null ){
-                    log.Warning("【条件类型表】 id >> " + objTerm.toString() + " not found " );
-                    continue;
-                }
-                Object table = termData.get("table");//表关联
-                if ( table == null ){
-                    log.Warning("【条件类型表】 id >> " + objTerm.toString() + " table is null " );
-                    continue;
-                }
-                String tableName =  table.toString();
-                if (tableName.equals("") == true){//字段为空
-                    values.add( 0 );
-                    continue;
-                }
+            String termFieldName = tableRef.getValue();
+            String termIdFieldName = data.getTableRefValueField().get(relateTable);
+            if (this.isEmptyStr(termFieldName) || this.isEmptyStr(termIdFieldName)){
+                continue;
+            }
+            Map<String, Object> referTableMapping = mapping.get(relateTable);
+            if (referTableMapping == null || referTableMapping.isEmpty()) {
+                log.Warning("table " + data.getAlias() + " refer data not found :" + termFieldName + " - " + relateTable);
+                continue;
+            }
 
-                Map<String, Object> tableValue = mapping.get(tableName);
-                if (tableValue == null || tableValue.isEmpty()) {
-                    log.Warning("term table " + data.getAlias() + " refer data not found :" + tableName );
-                    continue;
-                }
-                Object tableData = tableValue.get( objTermId.toString() );
-                if( tableData == null ){
-                    log.Warning("term table: " + data.getAlias() + " id not found :" + objTermId.toString() );
-                    values.add( 0 );
-                }else{
-                    values.add( tableData );
+            for (Map<String, Object> tableFields : data.getDataArray()) {
+                Object termValue = tableFields.get(termFieldName);
+                Object termIdValue = tableFields.get(termIdFieldName);
+
+                if (termValue instanceof Object[] && termIdValue instanceof Object[]) {
+                    Object[] termArr = (Object[])termValue;
+                    Object[] termIdArr = (Object[])termIdValue;
+                    if (termIdArr.length == 0) {
+                        continue;
+                    }
+                    if ( termArr.length != termIdArr.length ) {
+                        log.Warning("term table 【" + data.getAlias() + "】 term length not equal  >> " + tableFields);
+                        continue;
+                    }
+                    List<Object> keys = new ArrayList<Object>();
+                    List<Object> values = new ArrayList<Object>();
+                    for ( int i=0; i<termArr.length; i++ ){
+                        Object objTerm = termArr[i];
+                        Object objTermId = termIdArr[i];
+                        TermResult result = GetRelateTableValue(data, termTable, mapping, objTerm, objTermId);
+                        keys.add(result.key);
+                        values.add(result.value);
+                    }
+                    tableFields.put(termFieldName, keys.toArray());
+                    tableFields.put(termIdFieldName, values.toArray());
+                } else {
+                    TermResult result = GetRelateTableValue(data, termTable, mapping, termValue, termIdValue);
+                    tableFields.put(termFieldName, result.key);
+                    tableFields.put(termIdFieldName, result.value);
                 }
             }
-            tableFields.put(termId, values.toArray());
         }
+    }
+
+    class TermResult {
+        Object key = 0;
+        Object value = 0;
+    }
+
+    public TermResult GetRelateTableValue(TableData data, TableData termTable, Map<String, Map<String, Object>> mapping, Object objTerm, Object objTermId)  {
+        Map<String, Object> termData = termTable.getDataByName( objTerm.toString() );
+        TermResult result = new TermResult();
+        if ( termData == null ){
+            log.Warning("【" + termTable.getAlias() + "】 id >> " + objTerm + " not found " );
+            return result;
+        }
+
+        TableField fieldId = termTable.getFieldByType(FieldType.ID);
+        result.key = termData.get(fieldId.getName()); //表关联
+
+        TableField fieldTable = termTable.getFieldByType(FieldType.TABLE);
+        Object table = termData.get(fieldTable.getName());//表关联
+
+        if ( table == null ){
+            log.Warning("【" + termTable.getAlias() + "】 id >> " + objTerm + " table is null " );
+            return result;
+        }
+        String tableName = table.toString();
+        if (tableName.isEmpty()){//字段为空
+            return result;
+        }
+        Map<String, Object> tableValue = mapping.get(tableName);
+        if (tableValue == null || tableValue.isEmpty()) {
+            log.Warning("term table " + data.getAlias() + " refer data not found :" + tableName );
+            return result;
+        }
+        Object tableData = tableValue.get( objTermId.toString() );
+        if( tableData == null ){
+            log.Warning("term table: " + data.getAlias() + " id not found :" + objTermId.toString() );
+        }else{
+            result.value = tableData;
+        }
+        return result;
     }
 
     public boolean isEmptyStr(Object obj) {
@@ -295,7 +313,7 @@ public class ExcelParser {
 
     public static void main(String[] args) throws Exception {
         ExcelParser parser = new ExcelParser();
-        parser.parse(new File("/Users/hejialin/Downloads/testconvert"));
+        parser.parse(new File("/Users/hejialin/git/aliens/earth_server/config/table"));
         File output = new File("/Users/hejialin/Downloads/testconvert/output");
         output.mkdirs();
         for (TableData data : parser.getData().values()) {

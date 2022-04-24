@@ -27,6 +27,10 @@ public class TableData {
     //refer other table field   field alias- mapping table alias
     private Map<String, String> refField = new HashMap<String, String>();
 
+    //
+    private Map<String, String> tableRefKeyField = new HashMap<String, String>();
+    private Map<String, String> tableRefValueField = new HashMap<String, String>();
+
     //all data
     private List<Map<String, Object>> dataArray = new ArrayList<Map<String, Object>>();
 
@@ -44,12 +48,32 @@ public class TableData {
         refField.put(fieldName, mappingTableName);
     }
 
+    public void addTableRefFieldKey(String fieldName, String mappingTableName) {
+        tableRefKeyField.put(fieldName, mappingTableName);
+    }
+
+    public void addTableRefFieldValue(String fieldName, String mappingTableName) {
+        tableRefValueField.put(fieldName, mappingTableName);
+    }
+
     public boolean haveRef() {
         return !this.refField.isEmpty();
     }
 
+    public boolean haveTableRef() {
+        return !this.tableRefKeyField.isEmpty();
+    }
+
     public Map<String, String> getRefField() {
         return refField;
+    }
+
+    public Map<String, String> getTableRefKeyField() {
+        return tableRefKeyField;
+    }
+
+    public Map<String, String> getTableRefValueField() {
+        return tableRefValueField;
     }
 
     public String getAlias() {
@@ -233,36 +257,16 @@ public class TableData {
         return dataArray;
     }
 
-    public Map<String, Object >getDataByTid( int tid ){
-        TableField field = this.getFieldByType( FieldType.ID );
-        if (field == null){
-            return null;
-        }
-        for( Map<String, Object > data :dataArray ){
-              Object obj = data.get( field.getName() );
-              if (obj == null){
-                  continue;
-              }
-              if(Integer.parseInt(obj.toString()) == tid ){
-                      return data;
-              }
-        }
-        return null;
-    }
-
-    public Map<String, Object>getDataByName( String name ){
+    public Map<String, Object > getDataByName( String name ){
         TableField field = this.getFieldByType( FieldType.NAME );
         if (field == null){
             return null;
         }
         for( Map<String, Object > data :dataArray ){
-            Object obj = data.get( field.getName() );
-            if (obj == null){
-                continue;
-            }
-            if(obj.toString()== name ){
-                return data;
-            }
+              Object obj = data.get( field.getName() );
+              if(name.equals(obj)){
+                  return data;
+              }
         }
         return null;
     }
