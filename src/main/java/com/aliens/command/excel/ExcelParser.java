@@ -234,6 +234,9 @@ public class ExcelParser {
                     Object[] termArr = (Object[])termValue;
                     Object[] termIdArr = (Object[])termIdValue;
                     if (termIdArr.length == 0) {
+                        if (termArr.length > 0) {
+                            tableFields.put(termFieldName, new Object[0]);
+                        }
                         continue;
                     }
                     if ( termArr.length != termIdArr.length ) {
